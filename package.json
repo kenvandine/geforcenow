@@ -1,6 +1,6 @@
 {
-  "name": "geforcenow-electron",
-  "appId": "com.github.hmlendea.${name}",
+  "name": "geforcenow",
+  "appId": "com.github.kenvandine.${name}",
   "productName": "GeForce NOW",
   "version": "1.10.0",
   "description": "A Linux desktop web app for GeForce NOW",
@@ -13,8 +13,6 @@
     "asar": false,
     "linux": {
       "target": [
-        "zip",
-        "AppImage",
         "snap"
       ],
       "category": "Games",
@@ -28,21 +26,20 @@
       ]
     },
     "extraFiles": [
-      "com.github.hmlendea.${name}.desktop"
+      "com.github.kenvandine.${name}.desktop"
     ]
   },
-  "repository": "https://github.com/hmlendea/gfn-electron",
+  "repository": "https://github.com/kenvandine/geforcenow",
   "keywords": [
-    "Electron",
     "gfn",
     "geforcenow",
     "geforce-now"
   ],
-  "author": "Horațiu Mlendea <Horatiu.Mlendea@ProtonMail.com>",
+  "author": "Ken VanDine <ken@vandine.org>",
   "license": "GPL-3.0",
   "devDependencies": {
-    "electron": "^21.1.0",
-    "electron-builder": "^23.3.3"
+    "electron": "^22.0.0",
+    "electron-builder": "^23.6.0"
   },
   "dependencies": {
     "discord-rich-presence": "^0.0.8"
