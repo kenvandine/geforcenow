@@ -1,5 +1,3 @@
-[![Donate](https://img.shields.io/badge/-%E2%99%A5%20Donate-%23ff69b4)](https://kenvandine.go.ro/fund.html) [![Build Status](https://github.com/kenvandine/geforcenow/actions/workflows/node.js.yml/badge.svg)](https://github.com/kenvandine/geforcenow/actions/workflows/node.js.yml) [![Latest GitHub release](https://img.shields.io/github/v/release/kenvandine/geforcenow)](https://github.com/kenvandine/geforcenow/releases/latest)
-
 # About
 
 Unofficial client for Nvidia's GeForce NOW game streaming service, providing a native Linux desktop experince and some additional features such as Discord rich presence.
@@ -10,7 +8,7 @@ This project and its contributors are not affiliated with Nvidia, nor it's GeFor
 
 # Installation
 
-[![Get it from the AUR](https://raw.githubusercontent.com/kenvandine/readme-assets/master/badges/stores/aur.png)](https://aur.archlinux.org/packages/geforcenow/) [![Get it from FlatHub](https://raw.githubusercontent.com/kenvandine/readme-assets/master/badges/stores/flathub.png)](https://flathub.org/apps/details/io.github.kenvandine.geforcenow) [![Get it from the Snap Store](https://raw.githubusercontent.com/snapcore/snap-store-badges/master/EN/%5BEN%5D-snap-store-white.png)](https://snapcraft.io/geforcenow)
+[![Get it from the Snap Store](https://raw.githubusercontent.com/snapcore/snap-store-badges/master/EN/%5BEN%5D-snap-store-white.png)](https://snapcraft.io/geforcenow)
 
 ***Note**: The main version of this project, which receives the most support, is the flatpak version hosted on FlatHub!*
 
@@ -71,7 +69,5 @@ npm install
 
 # Links
  - [GeForce NOW](https://nvidia.com/en-eu/geforce-now)
- - [FlatHub release](https://flathub.org/apps/details/io.github.kenvandine.geforcenow)
- - [FlatHub repository](https://github.com/flathub/io.github.kenvandine.geforcenow)
  - [Basic usage](https://github.com/kenvandine/geforcenow/wiki/Basic-usage)
  - [Troubleshooting](https://github.com/kenvandine/geforcenow/wiki/Troubleshooting)
