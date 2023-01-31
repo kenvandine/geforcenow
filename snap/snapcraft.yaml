@@ -1,0 +1,93 @@
+name: geforcenow
+version: 1.10.0
+summary: GeForce NOW
+description: Stream games using the Nvidia GeForce NOW service
+grade: stable
+confinement: strict
+base: core22
+
+architectures:
+  - build-on: amd64
+compression: lzo
+
+parts:
+  libraries:
+    plugin: nil
+    stage-packages:
+      - libxss1
+      - libvips42
+      - libsqlcipher0
+    prime:
+      - usr/lib/*/libXss*
+      - usr/lib/*/libvips*
+      - usr/lib/*/libsqlcipher*
+      - usr/lib/*/libIlm* #needed by libvips
+      - usr/lib/*/libMagick* #needed by libvips
+      - usr/lib/*/libcfitsio* #needed by libvips
+      - usr/lib/*/libcgif* #needed by libvips
+      - usr/lib/*/libexif* #needed by libvips
+      - usr/lib/*/libfftw3* #needed by libvips
+      - usr/lib/*/libgsf* #needed by libvips
+      - usr/lib/*/libheif* #needed by libvips
+      - usr/lib/*/libaec* #needed by libvips
+      - usr/lib/*/libimagequant* #needed by libvips
+      - usr/lib/*/libmatio* #needed by libvips
+      - usr/lib/*/libopenslide* #needed by libvips
+      - usr/lib/*/libwebpmux* #needed by libvips
+      - usr/lib/*/libHalf* #needed by libIlmImf
+      - usr/lib/*/libIex* #needed by libIlmImf
+      - usr/lib/*/libIm* #needed by libIlmImf
+      - usr/lib/*/liblqr* #needed by libMagickCore-6
+      - usr/lib/*/libaom* #needed by libheif
+      - usr/lib/*/libda* #needed by libheif
+      - usr/lib/*/libde* #needed by libheif
+      - usr/lib/*/libx265* #needed by libheif
+      - usr/lib/*/libnuma* #needed by libheif
+      - usr/lib/*/libhdf5* #needed by libmatio
+      - usr/lib/*/libsz* #needed by libhdf5
+
+  geforcenow:
+    plugin: dump
+    source: dist
+    build-packages:
+      - npm
+    override-build: |
+      craftctl default
+      npm i -g corepack
+      corepack enable
+      yarn build
+      sed -i 's|Icon=nvidia|Icon=${SNAP}/linux-unpacked/resources/app/icon.png|' $SNAPCRAFT_PART_SRC/linux-unpacked/com.github.kenvandine.geforcenow.desktop
+    prime:
+      - linux-unpacked
+      - -*/chrome-sandbox
+      - -*/resources/app.asar.unpacked/node_modules/sharp/vendor/lib
+      - -*/resources/app.asar.unpacked/node_modules/sharp/vendor/include
+
+  cleanup:
+    after: [ geforcenow ]
+    plugin: nil
+    build-snaps: [ gnome-42-2204 ]
+    override-prime: |
+        set -eux
+        cd /snap/gnome-42-2204/current
+        find . -type f,l -exec rm -f $SNAPCRAFT_PRIME/{} \;
+
+plugs:
+  shmem:
+    interface: shared-memory
+    private: true
+
+apps:
+  geforcenow:
+    extensions: [gnome]
+    desktop: linux-unpacked/com.github.kenvandine.geforcenow.desktop
+    command: linux-unpacked/geforcenow --use-tray-icon --no-sandbox --disable-seccomp-filter-sandbox
+    plugs:
+      - shmem
+      - network
+      - audio-playback
+      - audio-record
+      - joystick
+    environment:
+      GTK_USE_PORTAL: "1"
+      TMPDIR: $XDG_RUNTIME_DIR
