@@ -38,6 +38,8 @@ var homePage = 'https://play.geforcenow.com';
   async function createWindow() {
     const mainWindow = new BrowserWindow({
       fullscreenable: true,
+      width: 1280,
+      height: 720,
       webPreferences: {
         preload: path.join(__dirname, 'preload.js'),
         contextIsolation: false,
