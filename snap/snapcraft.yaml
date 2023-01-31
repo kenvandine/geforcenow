@@ -49,13 +49,8 @@ parts:
   geforcenow:
     plugin: dump
     source: dist
-    build-packages:
-      - npm
-    override-build: |
+    override-pull: |
       craftctl default
-      npm i -g corepack
-      corepack enable
-      yarn build
       sed -i 's|Icon=nvidia|Icon=${SNAP}/linux-unpacked/resources/app/icon.png|' $SNAPCRAFT_PART_SRC/linux-unpacked/com.github.kenvandine.geforcenow.desktop
     prime:
       - linux-unpacked
