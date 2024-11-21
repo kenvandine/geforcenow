@@ -10,14 +10,10 @@ This project and its contributors are not affiliated with Nvidia, nor it's GeFor
 
 [![Get it from the Snap Store](https://raw.githubusercontent.com/snapcore/snap-store-badges/master/EN/%5BEN%5D-snap-store-white.png)](https://snapcraft.io/geforcenow)
 
-***Note**: The main version of this project, which receives the most support, is the flatpak version hosted on FlatHub!*
-
 ## Manual Installation
 
  - Go to the [latest release](https://github.com/kenvandine/geforcenow/releases/latest).
  - Download the specific file that best fits your disto.
-
-***Note**: Manual installations are possible but not supported. Please use the flatpak version if you have any trouble with the manual installation!*
 
 # Usage
 
