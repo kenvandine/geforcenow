@@ -1,7 +1,7 @@
 name: geforcenow
 version: 1.10.0
 summary: GeForce NOW
-description: Stream games using the Nvidia GeForce NOW service
+description: Stream games using the nvidia GeForce NOW service
 grade: stable
 confinement: strict
 base: core22
