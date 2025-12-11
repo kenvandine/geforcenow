@@ -11,13 +11,12 @@ console.log('Process arguments: ' + process.argv);
 
 app.commandLine.appendSwitch('enable-features', 'VaapiVideoDecoder,WaylandWindowDecorations');
   
-app.commandLine.appendSwitch('disable-features', 'UseChromeOSDirectVideoDecoder');
+app.commandLine.appendSwitch('disable-features', 'UseChromeOSDirectVideoDecoder,AutomationControlled');
 app.commandLine.appendSwitch('enable-accelerated-mjpeg-decode');
 app.commandLine.appendSwitch('enable-accelerated-video');
 app.commandLine.appendSwitch('ignore-gpu-blacklist');
 app.commandLine.appendSwitch('enable-native-gpu-memory-buffers');
 app.commandLine.appendSwitch('enable-gpu-rasterization');
-app.commandLine.appendSwitch('disable-features', 'AutomationControlled'); // Needed for google auth
 
 async function createWindow() {
   const mainWindow = new BrowserWindow({
