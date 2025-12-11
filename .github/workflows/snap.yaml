@@ -19,7 +19,7 @@ jobs:
       id: build
     - uses: snapcore/action-publish@v1
       env:
-        SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_LOGIN }}
+        SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.STORE_LOGIN }}
       with:
         snap: ${{ steps.build.outputs.snap }}
         release: edge
@@ -34,7 +34,7 @@ jobs:
       id: build
     - uses: snapcore/action-publish@v1
       env:
-        SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_LOGIN }}
+        SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.STORE_LOGIN }}
       with:
         snap: ${{ steps.build.outputs.snap }}
         release: edge
