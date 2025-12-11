@@ -6,149 +6,146 @@ const { switchFullscreenState } = require('./windowManager.js');
 var homePage = 'https://play.geforcenow.com';
 var userAgent = 'Mozilla/5.0 (X11; Linux x86_64; rv:132.0) Gecko/20100101 Firefox/132.0';
 
-  console.log('Using user agent: ' + userAgent);
-  console.log('Process arguments: ' + process.argv);
+console.log('Using user agent: ' + userAgent);
+console.log('Process arguments: ' + process.argv);
 
-  app.commandLine.appendSwitch('enable-features', 'VaapiVideoDecoder,WaylandWindowDecorations');
+app.commandLine.appendSwitch('enable-features', 'VaapiVideoDecoder,WaylandWindowDecorations');
   
-  app.commandLine.appendSwitch(
-    'disable-features',
-    'UseChromeOSDirectVideoDecoder'
-  );
-  app.commandLine.appendSwitch('enable-accelerated-mjpeg-decode');
-  app.commandLine.appendSwitch('enable-accelerated-video');
-  app.commandLine.appendSwitch('ignore-gpu-blacklist');
-  app.commandLine.appendSwitch('enable-native-gpu-memory-buffers');
-  app.commandLine.appendSwitch('enable-gpu-rasterization');
-  app.commandLine.appendSwitch('disable-features', 'AutomationControlled'); // Needed for google auth
+app.commandLine.appendSwitch('disable-features', 'UseChromeOSDirectVideoDecoder');
+app.commandLine.appendSwitch('enable-accelerated-mjpeg-decode');
+app.commandLine.appendSwitch('enable-accelerated-video');
+app.commandLine.appendSwitch('ignore-gpu-blacklist');
+app.commandLine.appendSwitch('enable-native-gpu-memory-buffers');
+app.commandLine.appendSwitch('enable-gpu-rasterization');
+app.commandLine.appendSwitch('disable-features', 'AutomationControlled'); // Needed for google auth
 
-  async function createWindow() {
-    const mainWindow = new BrowserWindow({
-      fullscreenable: true,
-      width: 1280,
-      height: 720,
-      webPreferences: {
-        preload: path.join(__dirname, 'preload.js'),
-        nodeIntegration: true,
-        contextIsolation: true,
-        userAgent: userAgent,
-        sandbox: false
-      },
-    });
+async function createWindow() {
+  const mainWindow = new BrowserWindow({
+    fullscreenable: true,
+    width: 1280,
+    height: 720,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: true,
+      contextIsolation: true,
+      userAgent: userAgent,
+      sandbox: false
+    },
+  });
 
-    if (process.argv.includes('--direct-start')) {
-      mainWindow.loadURL('https://play.geforcenow.com/mall/#/streamer?launchSource=GeForceNOW&cmsId=' + process.argv[process.argv.indexOf('--direct-start') + 1]);
-    } else {
-      mainWindow.loadURL(homePage);
-    }
-
-    /*
-    uncomment this to debug any errors with loading GFN landing page
-
-    mainWindow.webContents.on("will-navigate", (event, url) => {
-      console.log("will-navigate", url);
-      event.preventDefault();
-    });
-    */
+  if (process.argv.includes('--direct-start')) {
+    mainWindow.loadURL('https://play.geforcenow.com/mall/#/streamer?launchSource=GeForceNOW&cmsId=' + process.argv[process.argv.indexOf('--direct-start') + 1]);
+  } else {
+    mainWindow.loadURL(homePage);
   }
 
-  // Open links with default browser
-  ipcMain.on('open-external-link', (event, url) => {
-    console.log('open-external-link: ', url);
-    shell.openExternal(url);
+  /*
+  uncomment this to debug any errors with loading GFN landing page
+
+  mainWindow.webContents.on("will-navigate", (event, url) => {
+    console.log("will-navigate", url);
+    event.preventDefault();
   });
+  */
+}
 
-  app.whenReady().then(async () => {
-    // FORCE remove the "Electron" string from the internal fallback
-    app.userAgentFallback = userAgent;
+// Open links with default browser
+ipcMain.on('open-external-link', (event, url) => {
+  console.log('open-external-link: ', url);
+  shell.openExternal(url);
+});
 
-    createWindow();
+app.whenReady().then(async () => {
+  // FORCE remove the "Electron" string from the internal fallback
+  app.userAgentFallback = userAgent;
 
-    DiscordRPC('GeForce NOW');
+  createWindow();
 
-    app.on('activate', async function() {
-      if (BrowserWindow.getAllWindows().length === 0) {
-        createWindow();
-      }
-    });
+  DiscordRPC('GeForce NOW');
 
-    globalShortcut.register('Super+F', async () => {
-      switchFullscreenState();
-    });
-
-    globalShortcut.register('F11', async () => {
-      switchFullscreenState();
-    });
-
-    globalShortcut.register('Alt+F4', async () => {
-      app.quit();
-    });
-
-    globalShortcut.register('Alt+Home', async () => {
-      BrowserWindow.getAllWindows()[0].loadURL(homePage);
-    });
-
-    globalShortcut.register('F4', async () => {
-      app.quit();
-    });
-
-    globalShortcut.register('Control+Shift+I', () => {
-      BrowserWindow.getAllWindows()[0].webContents.toggleDevTools();
-    });
-
-    globalShortcut.register('Esc', async () => {
-      var window = BrowserWindow.getAllWindows()[0];
-
-      window.webContents.sendInputEvent({
-        type: 'keyDown',
-        keyCode: 'Esc'
-      });
-      window.webContents.sendInputEvent({
-        type: 'char',
-        keyCode: 'Esc'
-      });
-      window.webContents.sendInputEvent({
-        type: 'keyUp',
-        keyCode: 'Esc'
-      });
-
-      window.webContents.sendInputEvent({
-        type: 'keyDown',
-        keyCode: 'Esc'
-      });
-      window.webContents.sendInputEvent({
-        type: 'char',
-        keyCode: 'Esc'
-      });
-      window.webContents.sendInputEvent({
-        type: 'keyUp',
-        keyCode: 'Esc'
-      });
-    });
-  });
-
-  app.on('browser-window-created', async function(e, window) {
-    window.setBackgroundColor('#1A1D1F');
-    window.setMenu(null);
-
-    window.webContents.setUserAgent(userAgent);
-
-    window.webContents.on('new-window', (event, url) => {
-      event.preventDefault();
-      BrowserWindow.getAllWindows()[0].loadURL(url);
-    });
-
-    window.on('page-title-updated', async function(e, title) {
-      DiscordRPC(title);
-    });
-  });
-
-  app.on('will-quit', async () => {
-    globalShortcut.unregisterAll();
-  });
-
-  app.on('window-all-closed', async function() {
-    if (process.platform !== 'darwin') {
-      app.quit();
+  app.on('activate', async function() {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
     }
   });
+
+  globalShortcut.register('Super+F', async () => {
+    switchFullscreenState();
+  });
+
+  globalShortcut.register('F11', async () => {
+    switchFullscreenState();
+  });
+
+  globalShortcut.register('Alt+F4', async () => {
+    app.quit();
+  });
+
+  globalShortcut.register('Alt+Home', async () => {
+    BrowserWindow.getAllWindows()[0].loadURL(homePage);
+  });
+
+  globalShortcut.register('F4', async () => {
+    app.quit();
+  });
+
+  globalShortcut.register('Control+Shift+I', () => {
+    BrowserWindow.getAllWindows()[0].webContents.toggleDevTools();
+  });
+
+  globalShortcut.register('Esc', async () => {
+    var window = BrowserWindow.getAllWindows()[0];
+
+    window.webContents.sendInputEvent({
+      type: 'keyDown',
+      keyCode: 'Esc'
+    });
+    window.webContents.sendInputEvent({
+      type: 'char',
+      keyCode: 'Esc'
+    });
+    window.webContents.sendInputEvent({
+      type: 'keyUp',
+      keyCode: 'Esc'
+    });
+
+    window.webContents.sendInputEvent({
+      type: 'keyDown',
+      keyCode: 'Esc'
+    });
+    window.webContents.sendInputEvent({
+      type: 'char',
+      keyCode: 'Esc'
+    });
+    window.webContents.sendInputEvent({
+      type: 'keyUp',
+      keyCode: 'Esc'
+    });
+  });
+});
+
+app.on('browser-window-created', async function(e, window) {
+  window.setBackgroundColor('#1A1D1F');
+  window.setMenu(null);
+
+  window.webContents.setUserAgent(userAgent);
+
+  window.webContents.on('new-window', (event, url) => {
+    event.preventDefault();
+    BrowserWindow.getAllWindows()[0].loadURL(url);
+  });
+
+  window.on('page-title-updated', async function(e, title) {
+    DiscordRPC(title);
+  });
+});
+
+app.on('will-quit', async () => {
+  globalShortcut.unregisterAll();
+});
+
+app.on('window-all-closed', async function() {
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
+});
