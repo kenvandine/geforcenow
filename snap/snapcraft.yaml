@@ -4,10 +4,11 @@ summary: GeForce NOW
 description: Stream games using the nvidia GeForce NOW service
 grade: stable
 confinement: strict
-base: core22
+base: core24
 
-architectures:
-  - build-on: amd64
+platforms:
+  amd64:
+  arm64:
 compression: lzo
 
 parts:
@@ -15,8 +16,8 @@ parts:
     plugin: nil
     stage-packages:
       - libxss1
-      - libvips42
-      - libsqlcipher0
+      - libvips42t64
+      - libsqlcipher1
     prime:
       - usr/lib/*/libXss*
       - usr/lib/*/libvips*
@@ -47,13 +48,31 @@ parts:
       - usr/lib/*/libsz* #needed by libhdf5
 
   geforcenow:
-    plugin: dump
-    source: dist
+    plugin: nil
+    source: .
+    build-snaps:
+      - node/24/stable
+    build-packages:
+      - git
     override-pull: |
       craftctl default
-      sed -i 's|Icon=nvidia|Icon=${SNAP}/linux-unpacked/resources/app/icon.png|' $SNAPCRAFT_PART_SRC/linux-unpacked/com.github.kenvandine.geforcenow.desktop
+      VERSION=$(craftctl get version)
+      if [ -z $VERSION ]; then
+        VERSION=$(git describe --tags --abbrev=10)
+        craftctl set version=$VERSION
+      fi
+      sed -i.bak -e "s|@@VERSION@@|$VERSION|g" $CRAFT_PART_SRC/package.json
+    override-build: |
+      npm install
+      npm run build
+      mkdir -p $SNAPCRAFT_PART_INSTALL/unpacked
+      cp $SNAPCRAFT_PROJECT_DIR/com.github.kenvandine.geforcenow.desktop $SNAPCRAFT_PART_INSTALL/
+      cp $SNAPCRAFT_PROJECT_DIR/icon.png $SNAPCRAFT_PART_INSTALL/
+      mv dist/linux*-unpacked/* $SNAPCRAFT_PART_INSTALL/unpacked
     prime:
-      - linux-unpacked
+      - com.github.kenvandine.geforcenow.desktop
+      - unpacked
+      - -*/assets/img/icon.png
       - -*/chrome-sandbox
       - -*/resources/app.asar.unpacked/node_modules/sharp/vendor/lib
       - -*/resources/app.asar.unpacked/node_modules/sharp/vendor/include
@@ -61,10 +80,10 @@ parts:
   cleanup:
     after: [ geforcenow ]
     plugin: nil
-    build-snaps: [ gnome-42-2204 ]
+    build-snaps: [ gnome-46-2404 ]
     override-prime: |
         set -eux
-        cd /snap/gnome-42-2204/current
+        cd /snap/gnome-46-2404/current
         find . -type f,l -exec rm -f $SNAPCRAFT_PRIME/{} \;
 
 plugs:
@@ -75,8 +94,8 @@ plugs:
 apps:
   geforcenow:
     extensions: [gnome]
-    desktop: linux-unpacked/com.github.kenvandine.geforcenow.desktop
-    command: linux-unpacked/geforcenow --use-tray-icon --no-sandbox --disable-seccomp-filter-sandbox
+    desktop: com.github.kenvandine.geforcenow.desktop
+    command: unpacked/geforcenow --use-tray-icon --no-sandbox --disable-seccomp-filter-sandbox
     plugs:
       - shmem
       - network
