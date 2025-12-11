@@ -1,5 +1,6 @@
 // All of the Node.js APIs are available in the preload process.
 // It has the same sandbox as a Chrome extension.
+const { ipcRenderer } = require('electron');
 
 window.addEventListener("DOMContentLoaded", () => {
   const replaceText = (selector, text) => {
@@ -33,3 +34,14 @@ window.addEventListener("DOMContentLoaded", () => {
     };
   }, 10_000);
 })();
+
+// List for DOMContentLoaded event
+window.addEventListener('DOMContentLoaded', () => {
+    // Listen for click events and fire open-external-link as needed
+    document.addEventListener('click', (event) => {
+        if (event.target.tagName === 'A' && event.target.href.startsWith('http')) {
+            event.preventDefault();
+            ipcRenderer.send('open-external-link', event.target.href);
+        }
+    });
+});

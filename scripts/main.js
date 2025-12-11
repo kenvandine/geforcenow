@@ -51,6 +51,12 @@ var userAgent = 'Mozilla/5.0 (X11; Linux x86_64; rv:132.0) Gecko/20100101 Firefo
     */
   }
 
+  // Open links with default browser
+  ipcMain.on('open-external-link', (event, url) => {
+    console.log('open-external-link: ', url);
+    shell.openExternal(url);
+  });
+
   app.whenReady().then(async () => {
     // FORCE remove the "Electron" string from the internal fallback
     app.userAgentFallback = userAgent;
