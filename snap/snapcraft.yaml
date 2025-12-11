@@ -18,6 +18,7 @@ parts:
       - libxss1
       - libvips42t64
       - libsqlcipher1
+      - libspng0
     prime:
       - usr/lib/*/libXss*
       - usr/lib/*/libvips*
@@ -35,6 +36,7 @@ parts:
       - usr/lib/*/libmatio* #needed by libvips
       - usr/lib/*/libopenslide* #needed by libvips
       - usr/lib/*/libwebpmux* #needed by libvips
+      - usr/lib/*/libspng* #needed by libvips
       - usr/lib/*/libHalf* #needed by libIlmImf
       - usr/lib/*/libIex* #needed by libIlmImf
       - usr/lib/*/libIm* #needed by libIlmImf
