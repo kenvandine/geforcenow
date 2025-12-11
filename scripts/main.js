@@ -20,6 +20,7 @@ var userAgent = 'Mozilla/5.0 (X11; Linux x86_64; rv:132.0) Gecko/20100101 Firefo
   app.commandLine.appendSwitch('ignore-gpu-blacklist');
   app.commandLine.appendSwitch('enable-native-gpu-memory-buffers');
   app.commandLine.appendSwitch('enable-gpu-rasterization');
+  app.commandLine.appendSwitch('disable-blink-features', 'AutomationControlled'); // Needed for google auth
 
   async function createWindow() {
     const mainWindow = new BrowserWindow({

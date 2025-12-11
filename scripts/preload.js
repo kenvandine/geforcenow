@@ -2,6 +2,14 @@
 // It has the same sandbox as a Chrome extension.
 const { ipcRenderer } = require('electron');
 
+Object.defineProperty(navigator, 'webdriver', {
+  get: () => undefined,
+});
+
+if (window.process && window.process.versions) {
+    delete window.process.versions['electron'];
+}
+
 window.addEventListener("DOMContentLoaded", () => {
   const replaceText = (selector, text) => {
     const element = document.getElementById(selector);
