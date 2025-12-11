@@ -43,8 +43,8 @@
   },
   "homepage": "https://github.com/kenvandine/geforcenow#readme",
   "devDependencies": {
-    "electron": "^37.2.6",
-    "electron-builder": "^25.1.8",
+    "electron": "^39.2.6",
+    "electron-builder": "^26.3.5",
     "electron-package": "^0.1.0"
   },
   "dependencies": {
