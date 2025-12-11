@@ -1,24 +1,10 @@
-const {app, globalShortcut, BrowserWindow } = require('electron');
+const {app, globalShortcut, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
 const { DiscordRPC } = require('./rpc.js');
 const { switchFullscreenState } = require('./windowManager.js');
 
 var homePage = 'https://play.geforcenow.com';
-
-  var userAgent =
-    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.101 Safari/537.36'; // Linux
-
-  if (process.argv.includes('--spoof-chromeos')) {
-    userAgent =
-      'Mozilla/5.0 (X11; CrOS x86_64 14909.100.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.83 Safari/537.36'; // ChromeOS
-    app.commandLine.appendSwitch('disable-features', 'UserAgentClientHint');
-  }
-
-  if (process.argv.includes('--spoof-windows')) {
-    userAgent =
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36'; // Windows
-    app.commandLine.appendSwitch('disable-features', 'UserAgentClientHint');
-  }
+var userAgent = 'Mozilla/5.0 (X11; Linux x86_64; rv:132.0) Gecko/20100101 Firefox/132.0';
 
   console.log('Using user agent: ' + userAgent);
   console.log('Process arguments: ' + process.argv);
@@ -42,8 +28,10 @@ var homePage = 'https://play.geforcenow.com';
       height: 720,
       webPreferences: {
         preload: path.join(__dirname, 'preload.js'),
-        contextIsolation: false,
+        nodeIntegration: true,
+        contextIsolation: true,
         userAgent: userAgent,
+        sandbox: false
       },
     });
 
@@ -64,6 +52,9 @@ var homePage = 'https://play.geforcenow.com';
   }
 
   app.whenReady().then(async () => {
+    // FORCE remove the "Electron" string from the internal fallback
+    app.userAgentFallback = userAgent;
+
     createWindow();
 
     DiscordRPC('GeForce NOW');
