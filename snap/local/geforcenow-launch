@@ -14,6 +14,16 @@ mkdir -p "$STATE_DIR"
 
 unset LD_PRELOAD
 
+# The client is SDL2-based (not Electron). SDL auto-detects a video driver,
+# but under XWayland it falls back to X11 RandR (libXrandr / `xrandr
+# --query`) to enumerate modes and refresh rates, which mutter's XWayland
+# integration can report incorrectly for HiDPI / high-refresh outputs.
+# Force SDL's native Wayland driver whenever a real compositor socket is
+# available so the app queries the compositor directly instead.
+if [ -n "${WAYLAND_DISPLAY:-}" ] && [ -S "${XDG_RUNTIME_DIR:-}/${WAYLAND_DISPLAY}" ]; then
+  export SDL_VIDEODRIVER=wayland
+fi
+
 cd "$SNAP/cef" || exit 1
 
 status=0

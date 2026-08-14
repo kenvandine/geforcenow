@@ -15,6 +15,11 @@ parts:
     plugin: nil
     build-packages:
       - ostree
+    stage-packages:
+      # The client links libXrandr and falls back to `xrandr --query` to
+      # enumerate display modes/refresh rates; the gnome extension ships
+      # libXrandr but not the CLI tool itself.
+      - x11-xserver-utils
     override-pull: |
       craftctl default
       set -eux
@@ -72,6 +77,7 @@ parts:
       - mall/*
       - nvc/*
       - nvtelemetry/*
+      - usr/bin/xrandr
 
   cleanup:
     after: [ geforcenow ]
