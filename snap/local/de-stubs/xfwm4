@@ -1,0 +1,3 @@
+#!/bin/sh
+# See gnome-shell stub for rationale.
+echo "xfwm4 4.18.0"

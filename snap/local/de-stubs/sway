@@ -1,0 +1,3 @@
+#!/bin/sh
+# See gnome-shell stub for rationale.
+echo "sway version 1.9"

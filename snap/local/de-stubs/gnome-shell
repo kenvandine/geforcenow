@@ -1,0 +1,6 @@
+#!/bin/sh
+# Stub so the client's desktop-environment probe (`gnome-shell --version`)
+# succeeds under strict confinement, where the real host binary is
+# unreachable. Only invoked when the app shells out to check; version
+# string format matches the real tool's output.
+echo "GNOME Shell 46.0"

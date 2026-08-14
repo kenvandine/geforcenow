@@ -67,6 +67,16 @@ parts:
       mkdir -p "$SNAPCRAFT_PART_INSTALL/bin"
       install -Dm755 "$SNAPCRAFT_PROJECT_DIR/snap/local/geforcenow-launch" "$SNAPCRAFT_PART_INSTALL/bin/geforcenow-launch"
 
+      # The client probes for the running compositor by shelling out to
+      # gnome-shell/plasmashell/xfwm4/sway --version to decide how to set up
+      # window decorations/WM integration. None of those host binaries are
+      # reachable under strict confinement, which left windows undecorated
+      # and unable to be closed via the WM. Stub them out on $PATH so the
+      # probe succeeds instead of failing outright.
+      for de in gnome-shell plasmashell xfwm4 sway; do
+        install -Dm755 "$SNAPCRAFT_PROJECT_DIR/snap/local/de-stubs/$de" "$SNAPCRAFT_PART_INSTALL/bin/$de"
+      done
+
       cp "$SNAPCRAFT_PROJECT_DIR/com.github.kenvandine.geforcenow.desktop" "$SNAPCRAFT_PART_INSTALL/"
       cp "$SNAPCRAFT_PROJECT_DIR/icon.png" "$SNAPCRAFT_PART_INSTALL/"
     prime:
