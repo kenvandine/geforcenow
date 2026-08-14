@@ -1,5 +1,5 @@
 name: geforcenow
-version: 1.11.1
+adopt-info: geforcenow
 summary: GeForce NOW
 description: Stream games using the nvidia GeForce NOW service
 grade: stable
@@ -8,76 +8,70 @@ base: core24
 
 platforms:
   amd64:
-  arm64:
 compression: lzo
 
 parts:
-  libraries:
-    plugin: nil
-    stage-packages:
-      - libxss1
-      - libvips42t64
-      - libsqlcipher1
-      - libspng0
-    prime:
-      - usr/lib/*/libXss*
-      - usr/lib/*/libvips*
-      - usr/lib/*/libsqlcipher*
-      - usr/lib/*/libIlm* #needed by libvips
-      - usr/lib/*/libMagick* #needed by libvips
-      - usr/lib/*/libcfitsio* #needed by libvips
-      - usr/lib/*/libcgif* #needed by libvips
-      - usr/lib/*/libexif* #needed by libvips
-      - usr/lib/*/libfftw3* #needed by libvips
-      - usr/lib/*/libgsf* #needed by libvips
-      - usr/lib/*/libheif* #needed by libvips
-      - usr/lib/*/libaec* #needed by libvips
-      - usr/lib/*/libimagequant* #needed by libvips
-      - usr/lib/*/libmatio* #needed by libvips
-      - usr/lib/*/libopenslide* #needed by libvips
-      - usr/lib/*/libwebpmux* #needed by libvips
-      - usr/lib/*/libspng* #needed by libvips
-      - usr/lib/*/libHalf* #needed by libIlmImf
-      - usr/lib/*/libIex* #needed by libIlmImf
-      - usr/lib/*/libIm* #needed by libIlmImf
-      - usr/lib/*/liblqr* #needed by libMagickCore-6
-      - usr/lib/*/libaom* #needed by libheif
-      - usr/lib/*/libda* #needed by libheif
-      - usr/lib/*/libde* #needed by libheif
-      - usr/lib/*/libx265* #needed by libheif
-      - usr/lib/*/libnuma* #needed by libheif
-      - usr/lib/*/libhdf5* #needed by libmatio
-      - usr/lib/*/libsz* #needed by libhdf5
-
   geforcenow:
     plugin: nil
-    source: .
-    build-snaps:
-      - node/24/stable
     build-packages:
-      - git
+      - ostree
     override-pull: |
       craftctl default
-      VERSION=$(craftctl get version)
-      if [ -z $VERSION ]; then
-        VERSION=$(git describe --tags --abbrev=10)
-        craftctl set version=$VERSION
+      set -eux
+
+      # CRAFT_PART_SRC (not CRAFT_PART_BUILD) is what reliably survives from
+      # the pull step into the build step's override-build invocation.
+      REPO="$CRAFT_PART_SRC/ostree-repo"
+      REF="app/com.nvidia.geforcenow/x86_64/master"
+      REMOTE_URL="https://international.download.nvidia.com/GFNLinux/flatpak/geforcenow_repo"
+
+      ostree --repo="$REPO" init --mode=archive-z2
+      # Key vendored from https://international.download.nvidia.com/GFNLinux/flatpak/pub.gpg
+      ostree --repo="$REPO" remote add --gpg-import="$SNAPCRAFT_PROJECT_DIR/snap/local/nvidia-gfn.pub.gpg" nvidia "$REMOTE_URL"
+      ostree --repo="$REPO" pull nvidia "$REF"
+
+      # NVIDIA stamps a human-readable version into the ostree commit
+      # message, e.g. "Version:2.0.87.130 Severity:recommended". There is
+      # no version string in the tree itself.
+      GFN_VERSION="$(ostree --repo="$REPO" log "$REF" | grep -oP 'Version:\K[0-9.]+' | head -n1 || true)"
+      COMMIT="$(ostree --repo="$REPO" rev-parse "$REF")"
+
+      if [ -n "$GFN_VERSION" ]; then
+        craftctl set version="$GFN_VERSION"
+      else
+        craftctl set version="0.0.$(date -u +%Y%m%d)-${COMMIT:0:8}"
       fi
-      sed -i.bak -e "s|@@VERSION@@|$VERSION|g" $CRAFT_PART_SRC/package.json
     override-build: |
-      npm install
-      npm run build
-      mkdir -p $SNAPCRAFT_PART_INSTALL/unpacked
-      cp $SNAPCRAFT_PROJECT_DIR/com.github.kenvandine.geforcenow.desktop $SNAPCRAFT_PART_INSTALL/
-      cp $SNAPCRAFT_PROJECT_DIR/icon.png $SNAPCRAFT_PART_INSTALL/
-      mv dist/linux*-unpacked/* $SNAPCRAFT_PART_INSTALL/unpacked
+      set -eux
+
+      REPO="$CRAFT_PART_SRC/ostree-repo"
+      REF="app/com.nvidia.geforcenow/x86_64/master"
+      CHECKOUT="$CRAFT_PART_BUILD/checkout"
+
+      rm -rf "$CHECKOUT"
+      ostree --repo="$REPO" checkout --user-mode "$REF" "$CHECKOUT"
+
+      # Stage the real app tree flat under $SNAP. Deliberately not staging
+      # checkout/files/bin/* — those are flatpak-only launcher/self-update
+      # scripts (flatpak-spawn, flatpak update) that don't apply in a snap.
+      cp -a "$CHECKOUT/files/cef" "$SNAPCRAFT_PART_INSTALL/cef"
+      cp -a "$CHECKOUT/files/mall" "$SNAPCRAFT_PART_INSTALL/mall"
+      cp -a "$CHECKOUT/files/nvc" "$SNAPCRAFT_PART_INSTALL/nvc"
+      cp -a "$CHECKOUT/files/nvtelemetry" "$SNAPCRAFT_PART_INSTALL/nvtelemetry"
+
+      mkdir -p "$SNAPCRAFT_PART_INSTALL/bin"
+      install -Dm755 "$SNAPCRAFT_PROJECT_DIR/snap/local/geforcenow-launch" "$SNAPCRAFT_PART_INSTALL/bin/geforcenow-launch"
+
+      cp "$SNAPCRAFT_PROJECT_DIR/com.github.kenvandine.geforcenow.desktop" "$SNAPCRAFT_PART_INSTALL/"
+      cp "$SNAPCRAFT_PROJECT_DIR/icon.png" "$SNAPCRAFT_PART_INSTALL/"
     prime:
       - com.github.kenvandine.geforcenow.desktop
-      - unpacked
-      - -*/assets/img/icon.png
-      - -*/chrome-sandbox
-      - -*/resources/app.asar.unpacked/node_modules/sharp/vendor/lib
-      - -*/resources/app.asar.unpacked/node_modules/sharp/vendor/include
+      - icon.png
+      - bin/*
+      - cef/*
+      - mall/*
+      - nvc/*
+      - nvtelemetry/*
 
   cleanup:
     after: [ geforcenow ]
@@ -97,13 +91,16 @@ apps:
   geforcenow:
     extensions: [gnome]
     desktop: com.github.kenvandine.geforcenow.desktop
-    command: unpacked/geforcenow --use-tray-icon --no-sandbox --disable-seccomp-filter-sandbox
+    command: bin/geforcenow-launch
     plugs:
       - shmem
       - network
       - audio-playback
       - audio-record
       - joystick
+      - password-manager-service
+      - hardware-observe
+      - network-observe
     environment:
       GTK_USE_PORTAL: "1"
       TMPDIR: $XDG_RUNTIME_DIR

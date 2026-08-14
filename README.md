@@ -1,10 +1,10 @@
 # About
 
-Unofficial client for Nvidia's GeForce NOW game streaming service, providing a native Linux desktop experince and some additional features such as Discord rich presence.
+Snap package of Nvidia's official GeForce NOW game streaming client for Linux, repacked from Nvidia's flatpak distribution.
 
 ## Disclaimer
 
-This project and its contributors are not affiliated with Nvidia, nor it's GeForce NOW product. This repository does not contain any Nvidia / GeForce NOW software. It is simply an Electron wrapper that loads the official GFN web application page, just as it would in a regular web browser.
+This project and its contributors are not affiliated with Nvidia, nor it's GeForce NOW product. This snap repacks Nvidia's official GeForce NOW Linux client, which Nvidia otherwise only distributes as a flatpak, so it can be installed and updated through the Snap Store.
 
 # Installation
 
@@ -22,10 +22,6 @@ This project and its contributors are not affiliated with Nvidia, nor it's GeFor
    - [Command-line arguments](https://github.com/kenvandine/geforcenow/wiki/Basic-usage#command-line-arguments)
    - [Changing the keyboard layout](https://github.com/kenvandine/geforcenow/wiki/Basic-usage#changing-the-keyboard-layout)
    - [Directly launching a game from the desktop](https://github.com/kenvandine/geforcenow/wiki/Basic-usage#directly-launching-a-game-from-the-desktop)
- - [Integrations](https://github.com/kenvandine/geforcenow/wiki/Integrations)
-   - [Discord](https://github.com/kenvandine/geforcenow/wiki/Integrations#discord)
-     - [Using native GFN + flatpak Discord](https://github.com/kenvandine/geforcenow/wiki/Integrations#using-native-gfn--flatpak-discord)
-     - [Disabling the Discord RPC](https://github.com/kenvandine/geforcenow/wiki/Integrations#disabling-the-discord-rpc)
  - [Troubleshooting](https://github.com/kenvandine/geforcenow/wiki/Troubleshooting)
    - [Gamepad controls are not detected](https://github.com/kenvandine/geforcenow/wiki/Troubleshooting#gamepad-controls-are-not-detected)
    - [Steam Deck controls are not detected](https://github.com/kenvandine/geforcenow/wiki/Troubleshooting#steam-deck-controls-are-not-detected)
@@ -34,34 +30,17 @@ This project and its contributors are not affiliated with Nvidia, nor it's GeFor
 
 ## Requirements
 
-You will need to install [npm](https://www.npmjs.com/), the Node.js package manager. On most distributions, the package is simply called `npm`.
-
-## Cloning the source code
-
-Once you have npm, clone the wrapper to a convenient location:
-
-```bash
-git clone https://github.com/kenvandine/geforcenow.git
-```
+You will need [snapcraft](https://snapcraft.io/snapcraft) to build the snap. `snapcraft` pulls Nvidia's official GeForce NOW client directly from their flatpak distribution (an OSTree repository) at build time, so a build requires network access to `international.download.nvidia.com`.
 
 ## Building
 
 ```bash
-npm install
-npm start
+git clone https://github.com/kenvandine/geforcenow.git
+cd geforcenow
+snapcraft
 ```
 
-On subsequent runs, `npm start` will be all that's required.
-
-## Updating the source code
-
-Simply pull the latest version of master and install any changed dependencies:
-
-```bash
-git checkout master
-git pull
-npm install
-```
+This always pulls whatever Nvidia currently has published on the `master` branch of their GeForce NOW flatpak repo, so re-running `snapcraft` picks up their latest release.
 
 # Links
  - [GeForce NOW](https://nvidia.com/en-eu/geforce-now)

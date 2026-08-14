@@ -1,0 +1,30 @@
+#!/bin/bash
+# Launcher for NVIDIA's official GeForce NOW Linux client.
+#
+# Trimmed re-implementation of the flatpak's files/bin/GeForceNOW run():
+# all flatpak-update / GeForceNOW_Downloader / flatpak-spawn logic is
+# removed since there is no flatpak stack inside the snap and updates are
+# handled by `snap refresh` instead. The in-app restart request (the app
+# drops a restart.json file when it wants to be relaunched) is preserved.
+set -u
+
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/NVIDIA/GeForceNOW"
+RESTART_FILE="$STATE_DIR/restart.json"
+mkdir -p "$STATE_DIR"
+
+unset LD_PRELOAD
+
+cd "$SNAP/cef" || exit 1
+
+status=0
+while true; do
+  ./GeForceNOW "$@"
+  status=$?
+  if [ -f "$RESTART_FILE" ]; then
+    rm -f "$RESTART_FILE"
+    continue
+  fi
+  break
+done
+
+exit "$status"
