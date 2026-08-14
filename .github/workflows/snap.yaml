@@ -6,6 +6,11 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+  schedule:
+    # Weekly rebuild so the snap picks up whatever Nvidia currently has
+    # published on their GeForce NOW flatpak repo (snapcraft.yaml always
+    # pulls the latest master ref, unpinned).
+    - cron: '0 0 * * 0'
 
 jobs:
   build-amd64:
