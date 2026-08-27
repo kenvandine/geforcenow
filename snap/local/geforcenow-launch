@@ -25,6 +25,31 @@ export LD_PRELOAD="$SNAP/lib/app-path-redirect.so"
 # don't get that for free, so set it explicitly.
 export LD_LIBRARY_PATH="$SNAP/cef${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
+# The client is SDL2-based (not Electron). Under XWayland it enumerates
+# monitors via X11 RandR, and on a mixed-DPI multi-monitor setup (e.g. a
+# HiDPI laptop panel plus a non-HiDPI external display) XWayland can only
+# present one unified pixel scale for its whole combined screen, rounding
+# up to the HiDPI panel's scale -- which inflates the non-HiDPI monitor's
+# reported/usable geometry to a multiple of its real resolution (e.g.
+# 6880x2880 reported for an actual 3440x1440 display). The client then
+# renders its window for that inflated canvas, but only the true
+# resolution is ever visible, so everything appears tiny. Forcing SDL's
+# native Wayland driver bypasses XWayland's RandR emulation entirely, so
+# each output's real scale is queried directly. This previously regressed
+# window decorations (the gnome extension doesn't bundle libdecor), so we
+# now stage libdecor-0-0 alongside this to keep them working.
+if [ -n "${WAYLAND_DISPLAY:-}" ] && [ -S "${XDG_RUNTIME_DIR:-}/${WAYLAND_DISPLAY}" ]; then
+  export SDL_VIDEODRIVER=wayland
+fi
+
+# libdecor itself is found fine via LD_LIBRARY_PATH, but it loads its
+# actual decoration-drawing plugin (libdecor-cairo.so) from a separate,
+# compile-time-baked-in absolute path (/usr/lib/x86_64-linux-gnu/libdecor/
+# plugins-1) unless overridden here -- under strict confinement that literal
+# path resolves to the base snap, not ours, so it'd find no plugin and
+# silently draw no decoration at all even with everything bundled correctly.
+export LIBDECOR_PLUGIN_DIR="$SNAP/usr/lib/x86_64-linux-gnu/libdecor/plugins-1"
+
 cd "$SNAP/cef" || exit 1
 
 # mesa-2404 (the GPU content snap the gnome extension pulls in) ships no

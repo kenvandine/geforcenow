@@ -20,6 +20,15 @@
  * the same hardcoded /app/... path. Without this, that exec silently fails,
  * the container never starts, and the app eventually shows a "Problem
  * Detected" dialog once the mandatory-plugin load times out.
+ *
+ * Finally, it intercepts SDL_CreateWindow: GeForceNOW creates its main
+ * window with SDL_WINDOW_BORDERLESS. Under XWayland this didn't matter --
+ * mutter's X11 window-manager path decorates top-level windows regardless
+ * of what the client requests -- but under native Wayland (forced in
+ * geforcenow-launch to fix HiDPI/multi-monitor scaling; see there) a
+ * borderless client genuinely gets no titlebar at all, since decoration is
+ * a pure client opt-in over Wayland. Force the window bordered right after
+ * creation so libdecor draws a titlebar again (move/close).
  */
 
 #define _GNU_SOURCE
@@ -260,4 +269,28 @@ int posix_spawn(pid_t *pid, const char *path,
                            attrp, argv, envp);
     free(redirected);
     return rc;
+}
+
+typedef void SDL_Window;
+
+/* GeForceNOW doesn't actually request a borderless window (confirmed: its
+ * SDL_CreateWindow flags never include SDL_WINDOW_BORDERLESS) -- the real
+ * reason it had no titlebar under native Wayland was that NVIDIA's bundled
+ * libSDL2 was compiled without libdecor support at all (see the sdl2 part
+ * in snapcraft.yaml, which replaces it with one that has). These hooks are
+ * kept as a harmless belt-and-suspenders guard in case that ever changes. */
+void SDL_SetWindowBordered(SDL_Window *window, int bordered) {
+    REAL(SDL_SetWindowBordered)
+    real_SDL_SetWindowBordered(window, 1);
+}
+
+SDL_Window *SDL_CreateWindow(const char *title, int x, int y, int w, int h,
+                              unsigned int flags) {
+    SDL_Window *win;
+    REAL(SDL_CreateWindow)
+
+    win = real_SDL_CreateWindow(title, x, y, w, h, flags);
+    if (win)
+        SDL_SetWindowBordered(win, 1);
+    return win;
 }

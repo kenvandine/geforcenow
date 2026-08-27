@@ -11,7 +11,53 @@ platforms:
 compression: lzo
 
 parts:
+  # NVIDIA's bundled libSDL2 (cef/libSDL2-2.0.so.0.3200.10) was compiled
+  # without libdecor support, so under native Wayland (forced in
+  # geforcenow-launch to fix HiDPI/multi-monitor scaling -- see there) it
+  # can never draw a titlebar: there's no code path in the binary that
+  # would even try, regardless of what's installed or what env vars are
+  # set. GeForceNOW itself was built from this exact upstream tag --
+  # confirmed via the embedded build path string in NVIDIA's binary,
+  # /tmp/SDL-release-2.32.10/ -- so build the same release ourselves with
+  # -DSDL_LIBDECOR=ON and swap it in as a drop-in replacement.
+  sdl2:
+    plugin: cmake
+    source: https://github.com/libsdl-org/SDL.git
+    source-tag: release-2.32.10
+    cmake-parameters:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DCMAKE_INSTALL_PREFIX=/usr
+      - -DSDL_SHARED=ON
+      - -DSDL_STATIC=OFF
+      - -DSDL_WAYLAND=ON
+      - -DSDL_LIBDECOR=ON
+      - -DSDL_X11=ON
+    build-packages:
+      - libwayland-dev
+      - wayland-protocols
+      - libxkbcommon-dev
+      - libdecor-0-dev
+      - libdrm-dev
+      - libgbm-dev
+      - libegl1-mesa-dev
+      - libgl1-mesa-dev
+      - libgles2-mesa-dev
+      - libvulkan-dev
+      - libdbus-1-dev
+      - libudev-dev
+      - libasound2-dev
+      - libpulse-dev
+      - libx11-dev
+      - libxext-dev
+      - libxrandr-dev
+      - libxcursor-dev
+      - libxi-dev
+      - libxfixes-dev
+      - libxss-dev
+      - libxxf86vm-dev
+
   geforcenow:
+    after: [ sdl2 ]
     plugin: nil
     build-packages:
       - ostree
@@ -21,6 +67,13 @@ parts:
       # enumerate display modes/refresh rates; the gnome extension ships
       # libXrandr but not the CLI tool itself.
       - x11-xserver-utils
+      # Needed to give the SDL2 window decorations when forced onto the
+      # native Wayland driver below -- the gnome extension doesn't bundle
+      # libdecor itself. The cairo plugin is what actually draws the
+      # fallback (non-compositor-side) decorations; libdecor-0-0 alone is
+      # just the loader shell.
+      - libdecor-0-0
+      - libdecor-0-plugin-1-cairo
     override-pull: |
       craftctl default
       set -eux
@@ -65,6 +118,15 @@ parts:
       cp -a "$CHECKOUT/files/nvc" "$SNAPCRAFT_PART_INSTALL/nvc"
       cp -a "$CHECKOUT/files/nvtelemetry" "$SNAPCRAFT_PART_INSTALL/nvtelemetry"
 
+      # Swap in our own libdecor-enabled SDL2 build (see the sdl2 part)
+      # in place of NVIDIA's, preserving the SONAME symlink chain so
+      # dynamic resolution keeps working regardless of exact patch version.
+      rm -f "$SNAPCRAFT_PART_INSTALL"/cef/libSDL2*
+      SDL2_LIB="$(find "$SNAPCRAFT_STAGE" -maxdepth 6 -name 'libSDL2-2.0.so.0.*' ! -type l | head -n1)"
+      install -Dm755 "$SDL2_LIB" "$SNAPCRAFT_PART_INSTALL/cef/$(basename "$SDL2_LIB")"
+      ln -sf "$(basename "$SDL2_LIB")" "$SNAPCRAFT_PART_INSTALL/cef/libSDL2-2.0.so.0"
+      ln -sf "libSDL2-2.0.so.0" "$SNAPCRAFT_PART_INSTALL/cef/libSDL2.so"
+
       mkdir -p "$SNAPCRAFT_PART_INSTALL/bin"
       install -Dm755 "$SNAPCRAFT_PROJECT_DIR/snap/local/geforcenow-launch" "$SNAPCRAFT_PART_INSTALL/bin/geforcenow-launch"
 
@@ -98,6 +160,12 @@ parts:
       - nvc/*
       - nvtelemetry/*
       - usr/bin/xrandr
+      # libdecor-cairo.so (the fallback decoration renderer) pulls in
+      # libcairo/libpango/etc. as transitive deps of the
+      # libdecor-0-plugin-1-cairo stage-package; prime the whole staged lib
+      # tree rather than hand-picking each one, since apt already resolved
+      # the full dependency chain.
+      - usr/lib/x86_64-linux-gnu/**
 
   cleanup:
     after: [ geforcenow ]
