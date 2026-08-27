@@ -15,6 +15,7 @@ parts:
     plugin: nil
     build-packages:
       - ostree
+      - gcc
     stage-packages:
       # The client links libXrandr and falls back to `xrandr --query` to
       # enumerate display modes/refresh rates; the gnome extension ships
@@ -77,12 +78,21 @@ parts:
         install -Dm755 "$SNAPCRAFT_PROJECT_DIR/snap/local/de-stubs/$de" "$SNAPCRAFT_PART_INSTALL/bin/$de"
       done
 
+      # GeForceNOW hardcodes /app-relative paths (a flatpak-only convention:
+      # flatpak always mounts the app's install tree at /app). snapd can't
+      # create a new top-level /app via `layout` on core24, so instead
+      # LD_PRELOAD a shim that rewrites "/app/..." opens to "$SNAP/...".
+      mkdir -p "$SNAPCRAFT_PART_INSTALL/lib"
+      gcc -shared -fPIC -O2 -o "$SNAPCRAFT_PART_INSTALL/lib/app-path-redirect.so" \
+        "$SNAPCRAFT_PROJECT_DIR/snap/local/app-path-redirect.c" -ldl
+
       cp "$SNAPCRAFT_PROJECT_DIR/com.github.kenvandine.geforcenow.desktop" "$SNAPCRAFT_PART_INSTALL/"
       cp "$SNAPCRAFT_PROJECT_DIR/icon.png" "$SNAPCRAFT_PART_INSTALL/"
     prime:
       - com.github.kenvandine.geforcenow.desktop
       - icon.png
       - bin/*
+      - lib/*
       - cef/*
       - mall/*
       - nvc/*

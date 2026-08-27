@@ -12,9 +12,28 @@ STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/NVIDIA/GeForceNOW"
 RESTART_FILE="$STATE_DIR/restart.json"
 mkdir -p "$STATE_DIR"
 
-unset LD_PRELOAD
+# Drop any host-provided LD_PRELOAD, then set our own: GeForceNOW hardcodes
+# /app-relative paths (a flatpak-only convention), so this shim rewrites
+# "/app/..." opens to "$SNAP/..." at the libc level. See
+# snap/local/app-path-redirect.c.
+export LD_PRELOAD="$SNAP/lib/app-path-redirect.so"
+
+# The flatpak sandbox's own environment sets LD_LIBRARY_PATH to include ".",
+# which (since flatpak always runs GeForceNOW from /app/cef) resolves to
+# /app/cef -- letting dlopen'd helper libraries (e.g. the GameStreamClient
+# plugin's dependency on libBifrost2.so) find their sibling libs there. We
+# don't get that for free, so set it explicitly.
+export LD_LIBRARY_PATH="$SNAP/cef${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
 cd "$SNAP/cef" || exit 1
+
+# mesa-2404 (the GPU content snap the gnome extension pulls in) ships no
+# VAAPI video-decode drivers, so Chromium's hardware video decode fails for
+# any <video> element GeForceNOW renders (e.g. the queue-wait ad), logging
+# "Unsupported pixel format: -1" on a loop. This forces software decode for
+# that path instead; it doesn't touch the actual game stream, which is
+# decoded by NVIDIA's own pipeline, not Chromium.
+set -- --disable-accelerated-video-decode "$@"
 
 status=0
 while true; do
